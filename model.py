@@ -63,6 +63,7 @@ class BikeModel(Model):
         pass
 
     ## Divide grid into three zones: downtown (work), middle (mix of work and home), and residential (home)
+    @staticmethod
     def get_zone(row, col, grid_size=20):
         center = grid_size / 2
         distance = max(abs(row - center), abs(col - center))  # distance from center
