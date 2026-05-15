@@ -1,6 +1,6 @@
 import random
 
-from agents import SamaritanAgent
+from agents import BikeAgent
 from mesa import Model
 from mesa.datacollection import DataCollector
 from mesa.discrete_space.property_layer import PropertyLayer
@@ -49,10 +49,10 @@ class BikeModel(Model):
             }
         )
 
-        ## Place agents on the grid
+        ## Place agents on the grid (PLACEHOLDER logic -- need to review)
         for x in range(self.width):
             for y in range(self.height):
-                agent = SamaritanAgent(self)
+                agent = BikeAgent(self)
                 self.grid.place_agent(agent, (x, y))
 
         ## Initialize datacollector
@@ -72,6 +72,7 @@ class BikeModel(Model):
         else:
             return "residential"
 
+    # BFS
     def place_connected_lanes(self):
         pass
 
