@@ -8,7 +8,7 @@ from mesa.space import SingleGrid
 
 
 class BikeModel(Model):
-    def __init__(self, width=20, height=20, radius=1, connectivity=False, seed=None):
+    def __init__(self, width=20, height=20, radius=1, connectivity=False, bike_speed_constant, car_speed_constant, safety_bonus, car_cost, seed=None):
         if seed is not None:
             seed = int(seed)
         super().__init__(rng=seed)
