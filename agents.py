@@ -5,21 +5,16 @@ from mesa import Agent
 
 class BikeAgent(Agent):
     ## Initiate agent instance, inherit model trait from parent class
-    def __init__(self, model):
+    def __init__(self, model, home):
         super().__init__(model)
 
-        ## choose work and home locations
-        ## 90% of home locations are in residential, with 10% in downtown
-        if self.model.random.random() < 0.9:
-            self.home = self.model.random.choice(self.model.residential_cells)
-        else:
-            self.home = self.model.random.choice(self.model.downtown_cells)
+        self.home = home
 
-        ## inversely, 90% of work locations are in downtown, with 10% in residential
-        if self.model.random.random() > 0.9:
-            self.work = self.model.random.choice(self.model.residential_cells)
-        else:
+        ## 90% of work locations are in downtown, with 10% in residential
+        if self.model.random.random() < 0.9:
             self.work = self.model.random.choice(self.model.downtown_cells)
+        else:
+            self.work = self.model.random.choice(self.model.residential_cells)
 
         self.commute_path = self.get_commute_path()
 
@@ -32,7 +27,6 @@ class BikeAgent(Agent):
         self.time_bike = len(self.commute_path) * self.model.bike_speed_constant
         self.time_car = len(self.commute_path) * self.model.car_speed_constant
 
-        ## probability of biking sampled randomly from uniform distribution
         self.p_bike = self.model.random.uniform(0, 1)
         self.mode = "bike" if self.model.random.random() < self.p_bike else "car"
 
@@ -51,7 +45,6 @@ class BikeAgent(Agent):
 
     ## Define basic decision rule
     def step(self):
-        # compute route costs
         cost_bike = (
             self.time_bike - self.model.safety_bonus * self.lane_coverage_on_path
         )
@@ -68,7 +61,7 @@ class BikeAgent(Agent):
         else:
             social_fraction = 0.0
 
-        # update p_bike via logistic function
+        ## probability of biking sampled randomly from uniform distribution
         self.p_bike = 1 / (
             1
             + math.exp(
@@ -78,6 +71,4 @@ class BikeAgent(Agent):
                 )
             )
         )
-
-        # make mode choice
         self.mode = "bike" if self.model.random.random() < self.p_bike else "car"

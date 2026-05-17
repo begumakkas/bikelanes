@@ -8,54 +8,83 @@ from mesa.space import SingleGrid
 
 
 class BikeModel(Model):
-    def __init__(self, width=20, height=20, radius=1, connectivity=False, bike_speed_constant, car_speed_constant, safety_bonus, car_cost, seed=None):
+    def __init__(
+        self,
+        width=20,
+        height=20,
+        n_lanes=50,
+        connectivity="fragmented",
+        bike_speed_constant=1.0,
+        car_speed_constant=0.7,
+        safety_bonus=1.0,
+        car_cost=2.0,
+        beta=1.0,
+        gamma=1.0,
+        seed=None,
+    ):
         if seed is not None:
             seed = int(seed)
         super().__init__(rng=seed)
+
         self.width = width
         self.height = height
-        self.radius = radius
-        self.grid = SingleGrid(width, height, torus=False)
+        self.n_lanes = n_lanes
         self.connectivity = connectivity
+        self.bike_speed_constant = bike_speed_constant
+        self.car_speed_constant = car_speed_constant
+        self.safety_bonus = safety_bonus
+        self.car_cost = car_cost
+        self.beta = beta
+        self.gamma = gamma
+
+        self.grid = SingleGrid(width, height, torus=False)
 
         self.downtown_cells = [
             (r, c)
-            for r in range(20)
-            for c in range(20)
+            for r in range(height)
+            for c in range(width)
             if self.get_zone(r, c) == "downtown"
         ]
         self.residential_cells = [
             (r, c)
-            for r in range(20)
-            for c in range(20)
+            for r in range(height)
+            for c in range(width)
             if self.get_zone(r, c) == "residential"
         ]
 
-        ## Add two property layers: 1) bike lane (boolean), 2) zone type (downtown vs residential)
-        # 1. Initialize empty bike lane layer
-        bike_lane_layer = PropertyLayer("bike_lane", 20, 20, False)
+        # Initialize bike lane property layer
+        bike_lane_layer = PropertyLayer("bike_lane", width, height, False)
         self.grid.add_property_layer(bike_lane_layer)
 
-        # 2. Populate it with placement function matches scenario
         if self.connectivity == "connected":
             self.place_connected_lanes(self.n_lanes)
         else:
             self.place_fragmented_lanes(self.n_lanes)
 
-        ## Define data collector
+        # Assign unique home cells: 90% residential, 10% downtown
+        n_residential = int(0.9 * (width * height))
+        n_downtown = (width * height) - n_residential
+
+        home_cells = self.random.sample(
+            self.residential_cells, min(n_residential, len(self.residential_cells))
+        ) + self.random.sample(
+            self.downtown_cells, min(n_downtown, len(self.downtown_cells))
+        )
+
+        # Place agents at their home cells
+        for home in home_cells:
+            agent = BikeAgent(self, home)
+            self.grid.place_agent(agent, home)
+
         self.datacollector = DataCollector(
             model_reporters={
-                ## populate
+                "cycling_mode_share": lambda m: (
+                    sum(1 for a in m.agents if a.mode == "bike") / len(m.agents)
+                ),
+                "LCC": lambda m: m.compute_lcc(),
             }
         )
 
-        ## Place agents on the grid (PLACEHOLDER logic -- need to review)
-        for x in range(self.width):
-            for y in range(self.height):
-                agent = BikeAgent(self)
-                self.grid.place_agent(agent, (x, y))
-
-        ## Initialize datacollector
         self.datacollector.collect(self)
 
     ## Define step:
