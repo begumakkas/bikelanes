@@ -1,6 +1,6 @@
 import solara
 from matplotlib.figure import Figure
-from mesa.visualization import Slider, SolaraViz, make_plot_component
+from mesa.visualization import Slider, SolaraViz, make_space_component
 from mesa.visualization.utils import update_counter
 from model import BikeModel
 
@@ -130,10 +130,12 @@ def get_summary(model):
 
 model1 = BikeModel()
 
+SpaceGraph = make_space_component(agent_portrayal)
+
 page = SolaraViz(
     model1,
     components=[
-        make_plot_component({"cycling_mode_share": "#2ecc71"}),
+        SpaceGraph,
         ModeSharePlot,
         LCCPlot,
         get_summary,
