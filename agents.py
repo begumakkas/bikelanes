@@ -1,16 +1,17 @@
 import math
 
-from mesa import Agent
+from mesa.discrete_space import CellAgent
 
 
-class BikeAgent(Agent):
-    ## Initiate agent instance, inherit model trait from parent class
+class BikeAgent(CellAgent):
     def __init__(self, model, home):
         super().__init__(model)
+        self.cell = home
 
+        ## store home as cell object, use .coordinate for tuple access
         self.home = home
 
-        ## 90% of work locations are in downtown, with 10% in residential
+        ## 90% of work locations are in downtown, 10% in residential
         if self.model.random.random() < 0.9:
             self.work = self.model.random.choice(self.model.downtown_cells)
         else:
@@ -25,10 +26,8 @@ class BikeAgent(Agent):
 
         self.commute_path = self.get_commute_path()
 
-        # cells with bike lanes as a fraction of total commute path (cells)
         self.lane_coverage_on_path = sum(
-            self.model.grid.properties["bike_lane"].data[r][c]
-            for r, c in self.commute_path
+            self.model.grid.bike_lane.data[r][c] for r, c in self.commute_path
         ) / len(self.commute_path)
 
         self.time_bike = len(self.commute_path) * self.model.bike_speed_constant
@@ -37,11 +36,10 @@ class BikeAgent(Agent):
         self.p_bike = self.model.random.uniform(0, 1)
         self.mode = "bike" if self.model.random.random() < self.p_bike else "car"
 
-    # Manhattan distance
     def get_commute_path(self):
         path = []
-        r, c = self.home
-        wr, wc = self.work
+        r, c = self.home.coordinate
+        wr, wc = self.work.coordinate
         while r != wr:
             r += 1 if wr > r else -1
             path.append((r, c))
@@ -50,17 +48,16 @@ class BikeAgent(Agent):
             path.append((r, c))
         return path
 
-    ## Define basic decision rule
     def step(self):
         cost_bike = (
             self.time_bike - self.model.safety_bonus * self.lane_coverage_on_path
         )
         cost_car = self.time_car + self.model.car_cost
-
         cost_difference = cost_car - cost_bike
 
-        # compute social fraction from Von Neumann neighbors (r=1) (based on home cell)
-        neighbors = self.model.grid.get_neighbors(self.home, moore=False, radius=1)
+        # get Von Neumann neighbors via cell connections
+        neighbor_cells = self.home.connections.values()
+        neighbors = [agent for cell in neighbor_cells for agent in cell.agents]
         if neighbors:
             social_fraction = sum(1 for n in neighbors if n.mode == "bike") / len(
                 neighbors
@@ -68,7 +65,6 @@ class BikeAgent(Agent):
         else:
             social_fraction = 0.0
 
-        ## probability of biking sampled randomly from uniform distribution
         self.p_bike = 1 / (
             1
             + math.exp(

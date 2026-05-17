@@ -1,8 +1,9 @@
+import numpy as np
 from agents import BikeAgent
 from mesa import Model
 from mesa.datacollection import DataCollector
+from mesa.discrete_space import OrthogonalVonNeumannGrid
 from mesa.discrete_space.property_layer import PropertyLayer
-from mesa.space import SingleGrid
 
 
 class BikeModel(Model):
@@ -35,23 +36,26 @@ class BikeModel(Model):
         self.beta = beta
         self.gamma = gamma
 
-        self.grid = SingleGrid(width, height, torus=False)
+        self.grid = OrthogonalVonNeumannGrid(
+            (width, height), torus=False, random=self.random
+        )
 
         self.downtown_cells = [
-            (r, c)
+            self.grid[(r, c)]
             for r in range(height)
             for c in range(width)
             if self.get_zone(r, c) == "downtown"
         ]
         self.residential_cells = [
-            (r, c)
+            self.grid[(r, c)]
             for r in range(height)
             for c in range(width)
             if self.get_zone(r, c) == "residential"
         ]
 
         # Initialize bike lane property layer
-        bike_lane_layer = PropertyLayer("bike_lane", width, height, False)
+        bike_lane_data = np.zeros((width, height), dtype=float)
+        bike_lane_layer = PropertyLayer.from_data("bike_lane", bike_lane_data)
         self.grid.add_property_layer(bike_lane_layer)
 
         if self.connectivity == "connected":
@@ -60,8 +64,9 @@ class BikeModel(Model):
             self.place_fragmented_lanes(self.n_lanes)
 
         # Assign unique home cells: 90% residential, 10% downtown
-        n_residential = int(0.9 * (width * height))
-        n_downtown = (width * height) - n_residential
+        n_agents = width * height
+        n_residential = int(0.9 * n_agents)
+        n_downtown = n_agents - n_residential
 
         home_cells = self.random.sample(
             self.residential_cells, min(n_residential, len(self.residential_cells))
@@ -70,9 +75,8 @@ class BikeModel(Model):
         )
 
         # Place agents at their home cells
-        for home in home_cells:
-            agent = BikeAgent(self, home)
-            self.grid.place_agent(agent, home)
+        for home_cell in home_cells:
+            agent = BikeAgent(self, home_cell)
 
         self.datacollector = DataCollector(
             model_reporters={
@@ -98,14 +102,13 @@ class BikeModel(Model):
             (r, c)
             for r in range(self.height)
             for c in range(self.width)
-            if self.grid.properties["bike_lane"].data[r][c]
+            if self.grid.bike_lane.data[r][c]
         )
         visited = set()
         largest = 0
 
         for cell in lane_cells:
             if cell not in visited:
-                # BFS from this cell
                 component_size = 0
                 queue = [cell]
                 visited.add(cell)
@@ -120,32 +123,26 @@ class BikeModel(Model):
 
         return largest
 
-    ## Divide grid into three zones: downtown (work), middle (mix of work and home), and residential (home)
     @staticmethod
     def get_zone(row, col, grid_size=20):
         center = grid_size / 2
-        distance = max(abs(row - center), abs(col - center))  # distance from center
+        distance = max(abs(row - center), abs(col - center))
         if distance < 5:
             return "downtown"
         else:
             return "residential"
 
-    # BFS
     def place_connected_lanes(self, n_lanes):
-        # start from a random cell near center
         start = (self.height // 2, self.width // 2)
-        self.grid.properties["bike_lane"].data[start[0]][start[1]] = True
+        self.grid.bike_lane.data[start[0]][start[1]] = 1.0
         placed = {start}
         frontier = self.get_lane_neighbors(*start)
 
         while len(placed) < n_lanes and frontier:
-            # pick a random cell from the frontier and place a lane
             next_cell = self.random.choice(frontier)
             frontier.remove(next_cell)
             if next_cell not in placed:
-                self.grid.properties["bike_lane"].data[next_cell[0]][next_cell[1]] = (
-                    True
-                )
+                self.grid.bike_lane.data[next_cell[0]][next_cell[1]] = 1.0
                 placed.add(next_cell)
                 for neighbor in self.get_lane_neighbors(*next_cell):
                     if neighbor not in placed and neighbor not in frontier:
@@ -155,9 +152,8 @@ class BikeModel(Model):
         all_cells = [(r, c) for r in range(self.height) for c in range(self.width)]
         cells = self.random.sample(all_cells, n)
         for r, c in cells:
-            self.grid.properties["bike_lane"].data[r][c] = True
+            self.grid.bike_lane.data[r][c] = 1.0
 
-    ## Define step:
     def step(self):
         self.agents.shuffle_do("step")
         self.datacollector.collect(self)
