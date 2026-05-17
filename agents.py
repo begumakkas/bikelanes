@@ -16,6 +16,13 @@ class BikeAgent(Agent):
         else:
             self.work = self.model.random.choice(self.model.residential_cells)
 
+        while self.work == self.home:
+            self.work = self.model.random.choice(
+                self.model.downtown_cells
+                if self.model.random.random() < 0.9
+                else self.model.residential_cells
+            )
+
         self.commute_path = self.get_commute_path()
 
         # cells with bike lanes as a fraction of total commute path (cells)
