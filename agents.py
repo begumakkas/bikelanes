@@ -30,8 +30,8 @@ class BikeAgent(CellAgent):
             self.model.grid.bike_lane.data[r][c] for r, c in self.commute_path
         ) / len(self.commute_path)
 
-        self.time_bike = len(self.commute_path) * self.model.bike_speed_constant
-        self.time_car = len(self.commute_path) * self.model.car_speed_constant
+        self.time_bike = len(self.commute_path) * self.model.bike_time_factor
+        self.time_car = len(self.commute_path) * self.model.car_time_factor
 
         self.p_bike = self.model.random.uniform(0, 1)
         self.mode = "bike" if self.model.random.random() < self.p_bike else "car"
@@ -74,4 +74,4 @@ class BikeAgent(CellAgent):
                 )
             )
         )
-        self.mode = "bike" if self.model.random.random() < self.p_bike else "car"
+        self.mode = "bike" if self.p_bike > self.model.bike_threshold else "car"

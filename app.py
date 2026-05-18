@@ -45,15 +45,15 @@ model_params = {
         max=5.0,
         step=0.5,
     ),
-    "bike_speed_constant": Slider(
-        label="Bike Speed Constant",
+    "bike_time_factor": Slider(
+        label="Bike Time Constant",
         value=1.0,
         min=0.5,
         max=3.0,
         step=0.5,
     ),
-    "car_speed_constant": Slider(
-        label="Car Speed Constant",
+    "car_time_factor": Slider(
+        label="Car Time Constant",
         value=0.7,
         min=0.5,
         max=3.0,

@@ -13,10 +13,11 @@ class BikeModel(Model):
         height=20,
         n_lanes=50,
         connectivity="fragmented",
-        bike_speed_constant=1.0,
-        car_speed_constant=0.7,
+        bike_time_factor=1.5,
+        car_time_factor=0.7,
         safety_bonus=1.0,
         car_cost=2.0,
+        bike_threshold=0.5,
         beta=1.0,
         gamma=1.0,
         seed=None,
@@ -29,12 +30,13 @@ class BikeModel(Model):
         self.height = height
         self.n_lanes = n_lanes
         self.connectivity = connectivity
-        self.bike_speed_constant = bike_speed_constant
-        self.car_speed_constant = car_speed_constant
+        self.bike_time_factor = bike_time_factor
+        self.car_time_factor = car_time_factor
         self.safety_bonus = safety_bonus
         self.car_cost = car_cost
         self.beta = beta
         self.gamma = gamma
+        self.bike_threshold = bike_threshold
 
         self.grid = OrthogonalVonNeumannGrid(
             (width, height), torus=False, random=self.random
@@ -76,7 +78,7 @@ class BikeModel(Model):
 
         # Place agents at their home cells
         for home_cell in home_cells:
-            agent = BikeAgent(self, home_cell)
+            BikeAgent(self, home_cell)
 
         self.datacollector = DataCollector(
             model_reporters={
