@@ -2,6 +2,7 @@ import pandas as pd
 from mesa.batchrunner import batch_run
 from model import BikeModel
 
+## Define model parameters
 params = {
     "seed": range(20),  # 20 different seeds
     "connectivity": ["connected", "fragmented"],
@@ -12,6 +13,7 @@ params = {
     "safety_bonus": 2.0,
 }
 
+## Run model with defined parameters
 results = batch_run(
     BikeModel,
     parameters=params,
@@ -19,5 +21,7 @@ results = batch_run(
     data_collection_period=-1,  # only collect at end
 )
 
+## Save results as pandas pf
 df = pd.DataFrame(results)
+## Export results to csv
 df.to_csv("batch_results.csv", index=False)

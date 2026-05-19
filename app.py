@@ -5,10 +5,10 @@ from mesa.visualization import (
     make_plot_component,
     make_space_component,
 )
-from mesa.visualization.components import AgentPortrayalStyle
+from mesa.visualization.components import AgentPortrayalStyle, PropertyLayerStyle
 from model import BikeModel
 
-# Define model parameters
+## Define variable model parameters
 model_params = {
     "seed": {
         "type": "InputText",
@@ -73,6 +73,7 @@ model_params = {
 }
 
 
+## Define agent portrayal (color, marker, size)
 def agent_portrayal(agent):
     return AgentPortrayalStyle(
         color="#2ecc71" if agent.mode == "bike" else "#e74c3c",
@@ -81,9 +82,13 @@ def agent_portrayal(agent):
     )
 
 
-ModeSharePlot = make_plot_component("cycling_mode_share")
+def propertylayer_portrayal(layer):
+    return PropertyLayerStyle(
+        color="#02C39A", alpha=0.3, colorbar=False, vmin=0, vmax=1
+    )
 
 
+## Summarize current bike mode share and LCC size
 def get_summary(model):
     data = model.datacollector.get_model_vars_dataframe()
     if data.empty:
@@ -95,12 +100,20 @@ def get_summary(model):
     )
 
 
-model1 = BikeModel()
+## Instantiate model
+model = BikeModel()
 
-SpaceGraph = make_space_component(agent_portrayal)
+## Define model plot component based on above
+ModeSharePlot = make_plot_component("cycling_mode_share")
 
+## Define model space component based on above
+SpaceGraph = make_space_component(
+    agent_portrayal, propertylayer_portrayal=propertylayer_portrayal
+)
+
+## Define all aspects of page
 page = SolaraViz(
-    model1,
+    model,
     components=[
         SpaceGraph,
         ModeSharePlot,
@@ -111,4 +124,5 @@ page = SolaraViz(
     agent_portrayal=agent_portrayal,
 )
 
+## Return page
 page
