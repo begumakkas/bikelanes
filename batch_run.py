@@ -9,6 +9,7 @@ params = {
     "car_cost": 4.0,
     "beta": 0.5,
     "gamma": 1.0,
+    "safety_bonus": 2.0,
 }
 
 results = batch_run(

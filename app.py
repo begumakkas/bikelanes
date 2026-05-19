@@ -100,23 +100,6 @@ def ModeSharePlot(model):
     solara.FigureMatplotlib(fig)
 
 
-@solara.component
-def LCCPlot(model):
-    update_counter.get()
-    fig = Figure(figsize=(6, 3))
-    ax = fig.subplots()
-
-    data = model.datacollector.get_model_vars_dataframe()
-    if not data.empty:
-        ax.plot(data.index, data["LCC"], color="#3498db", label="LCC")
-        ax.set_xlabel("Step")
-        ax.set_ylabel("Cells")
-        ax.set_title("Largest Connected Component")
-        ax.legend()
-
-    solara.FigureMatplotlib(fig)
-
-
 def get_summary(model):
     data = model.datacollector.get_model_vars_dataframe()
     if data.empty:
@@ -137,7 +120,6 @@ page = SolaraViz(
     components=[
         SpaceGraph,
         ModeSharePlot,
-        LCCPlot,
         get_summary,
     ],
     model_params=model_params,
