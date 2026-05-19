@@ -84,7 +84,7 @@ class BikeAgent(CellAgent):
         # else:
         #     self.mode = "bike" if self.p_bike > self.model.bike_threshold else "car"
 
-        if self.model.steps == 1 and self.unique_id < 5:
-            print(
-                f"agent {self.unique_id}: cost_diff={cost_difference:.3f}, p_bike={self.p_bike:.3f}, social={social_fraction:.3f}, mode={self.mode}"
-            )
+        # if self.model.steps == 1 and self.unique_id < 5:
+        #     print(
+        #         f"agent {self.unique_id}: cost_diff={cost_difference:.3f}, p_bike={self.p_bike:.3f}, social={social_fraction:.3f}, mode={self.mode}"
+        #     )
