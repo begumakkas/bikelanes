@@ -66,7 +66,7 @@ class BikeModel(Model):
             self.place_fragmented_lanes(self.n_lanes)
 
         # Assign unique home cells: 90% residential, 10% downtown
-        n_agents = width * height
+        n_agents = 300
         n_residential = int(0.9 * n_agents)
         n_downtown = n_agents - n_residential
 

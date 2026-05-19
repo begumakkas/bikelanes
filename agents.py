@@ -34,7 +34,8 @@ class BikeAgent(CellAgent):
         self.time_car = len(self.commute_path) * self.model.car_time_factor
 
         self.p_bike = self.model.random.uniform(0, 1)
-        self.mode = "bike" if self.model.random.random() < self.p_bike else "car"
+        self.mode = "car"
+        # self.mode = "bike" if self.model.random.random() < self.p_bike else "car"
 
     def get_commute_path(self):
         path = []
@@ -74,4 +75,16 @@ class BikeAgent(CellAgent):
                 )
             )
         )
+        ## deterministic choie
         self.mode = "bike" if self.p_bike > self.model.bike_threshold else "car"
+
+        ## probabilistic choice
+        # if self.model.random.random() < 0.05:  # 5% chance of random choice
+        #     self.mode = "bike" if self.model.random.random() < 0.3 else "car"
+        # else:
+        #     self.mode = "bike" if self.p_bike > self.model.bike_threshold else "car"
+
+        if self.model.steps == 1 and self.unique_id < 5:
+            print(
+                f"agent {self.unique_id}: cost_diff={cost_difference:.3f}, p_bike={self.p_bike:.3f}, social={social_fraction:.3f}, mode={self.mode}"
+            )

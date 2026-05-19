@@ -26,14 +26,14 @@ model_params = {
     },
     "safety_bonus": Slider(
         label="Safety Bonus",
-        value=1.0,
+        value=2.0,
         min=0.0,
         max=5.0,
         step=0.5,
     ),
     "beta": Slider(
         label="Cost Sensitivity (β)",
-        value=1.0,
+        value=0.5,
         min=0.0,
         max=5.0,
         step=0.5,
@@ -61,7 +61,7 @@ model_params = {
     ),
     "car_cost": Slider(
         label="Car Cost Penalty",
-        value=2.0,
+        value=4.0,
         min=0.0,
         max=5.0,
         step=0.5,
