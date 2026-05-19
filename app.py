@@ -1,7 +1,11 @@
 import solara
-from matplotlib.figure import Figure
-from mesa.visualization import Slider, SolaraViz, make_space_component
-from mesa.visualization.utils import update_counter
+from mesa.visualization import (
+    Slider,
+    SolaraViz,
+    make_plot_component,
+    make_space_component,
+)
+from mesa.visualization.components import AgentPortrayalStyle
 from model import BikeModel
 
 # Define model parameters
@@ -70,34 +74,14 @@ model_params = {
 
 
 def agent_portrayal(agent):
-    return {
-        "color": "#2ecc71" if agent.mode == "bike" else "#e74c3c",
-        "marker": "s",
-        "size": 20,
-    }
+    return AgentPortrayalStyle(
+        color="#2ecc71" if agent.mode == "bike" else "#e74c3c",
+        marker="s",
+        size=20,
+    )
 
 
-@solara.component
-def ModeSharePlot(model):
-    update_counter.get()
-    fig = Figure(figsize=(6, 3))
-    ax = fig.subplots()
-
-    data = model.datacollector.get_model_vars_dataframe()
-    if not data.empty:
-        ax.plot(
-            data.index, data["cycling_mode_share"], color="#2ecc71", label="Bike share"
-        )
-        ax.axhline(
-            0.5, color="gray", linestyle="--", linewidth=0.8, label="50% threshold"
-        )
-        ax.set_ylim(0, 1)
-        ax.set_xlabel("Step")
-        ax.set_ylabel("Mode Share")
-        ax.set_title("Cycling Mode Share Over Time")
-        ax.legend()
-
-    solara.FigureMatplotlib(fig)
+ModeSharePlot = make_plot_component("cycling_mode_share")
 
 
 def get_summary(model):
