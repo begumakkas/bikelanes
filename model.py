@@ -159,3 +159,7 @@ class BikeModel(Model):
     def step(self):
         self.agents.shuffle_do("step")
         self.datacollector.collect(self)
+
+        ## stopping condition
+        if self.steps >= 100:
+            self.running = False
