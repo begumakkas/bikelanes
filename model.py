@@ -7,6 +7,7 @@ from mesa.discrete_space.property_layer import PropertyLayer
 
 
 class BikeModel(Model):
+    ## Define initiation, inherit seed property from parent class
     def __init__(
         self,
         width=20,
@@ -25,7 +26,7 @@ class BikeModel(Model):
         if seed is not None:
             seed = int(seed)
         super().__init__(rng=seed)
-
+        ## Instantiate model parameters
         self.width = width
         self.height = height
         self.n_lanes = n_lanes
@@ -37,17 +38,19 @@ class BikeModel(Model):
         self.beta = beta
         self.gamma = gamma
         self.bike_threshold = bike_threshold
-
+        ## Create grid
         self.grid = OrthogonalVonNeumannGrid(
             (width, height), torus=False, random=self.random
         )
 
+        # initialize downtown cells
         self.downtown_cells = [
             self.grid[(r, c)]
             for r in range(height)
             for c in range(width)
             if self.get_zone(r, c) == "downtown"
         ]
+        # initialize residential cells
         self.residential_cells = [
             self.grid[(r, c)]
             for r in range(height)
@@ -60,6 +63,7 @@ class BikeModel(Model):
         bike_lane_layer = PropertyLayer.from_data("bike_lane", bike_lane_data)
         self.grid.add_property_layer(bike_lane_layer)
 
+        # determine whether connected or fragmented lanes will be placed
         if self.connectivity == "connected":
             self.place_connected_lanes(self.n_lanes)
         else:
@@ -80,6 +84,7 @@ class BikeModel(Model):
         for home_cell in home_cells:
             BikeAgent(self, home_cell)
 
+        ## Define datacollector: collects bike mode share and longest connected (lane) component
         self.datacollector = DataCollector(
             model_reporters={
                 "cycling_mode_share": lambda m: (
@@ -91,6 +96,7 @@ class BikeModel(Model):
 
         self.datacollector.collect(self)
 
+    # Helper to get neighbors
     def get_lane_neighbors(self, r, c):
         neighbors = []
         for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
@@ -99,6 +105,7 @@ class BikeModel(Model):
                 neighbors.append((nr, nc))
         return neighbors
 
+    # compute longest connected component
     def compute_lcc(self):
         lane_cells = set(
             (r, c)
@@ -125,6 +132,7 @@ class BikeModel(Model):
 
         return largest
 
+    # sets grid cell zone (downtown vs residential)
     @staticmethod
     def get_zone(row, col, grid_size=20):
         center = grid_size / 2
@@ -134,6 +142,7 @@ class BikeModel(Model):
         else:
             return "residential"
 
+    # Use BFS to place connected lanes
     def place_connected_lanes(self, n_lanes):
         start = (self.height // 2, self.width // 2)
         self.grid.bike_lane.data[start[0]][start[1]] = 1.0
@@ -150,12 +159,14 @@ class BikeModel(Model):
                     if neighbor not in placed and neighbor not in frontier:
                         frontier.append(neighbor)
 
+    # Place fragmented lanes using random placement
     def place_fragmented_lanes(self, n):
         all_cells = [(r, c) for r in range(self.height) for c in range(self.width)]
         cells = self.random.sample(all_cells, n)
         for r, c in cells:
             self.grid.bike_lane.data[r][c] = 1.0
 
+    ## Define step: all agents move; stop after 100 steps
     def step(self):
         self.agents.shuffle_do("step")
         self.datacollector.collect(self)

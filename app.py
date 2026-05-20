@@ -82,6 +82,7 @@ def agent_portrayal(agent):
     )
 
 
+## Define bike lane portayal
 def propertylayer_portrayal(layer):
     return PropertyLayerStyle(
         color="#02C39A", alpha=0.3, colorbar=False, vmin=0, vmax=1

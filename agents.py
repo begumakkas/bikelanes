@@ -4,8 +4,10 @@ from mesa.discrete_space import CellAgent
 
 
 class BikeAgent(CellAgent):
+    ## Initiate agent, inherit model property from parent class
     def __init__(self, model, home):
         super().__init__(model)
+        ## Set variable traits based on model parameters
         self.cell = home
 
         ## store home as cell object, use .coordinate for tuple access
@@ -24,8 +26,10 @@ class BikeAgent(CellAgent):
                 else self.model.residential_cells
             )
 
+        # calculate commute path
         self.commute_path = self.get_commute_path()
 
+        # calculate cells with lanes on commute path
         self.lane_coverage_on_path = sum(
             self.model.grid.bike_lane.data[r][c] for r, c in self.commute_path
         ) / len(self.commute_path)
@@ -33,10 +37,12 @@ class BikeAgent(CellAgent):
         self.time_bike = len(self.commute_path) * self.model.bike_time_factor
         self.time_car = len(self.commute_path) * self.model.car_time_factor
 
+        # initialize probability of biking randomly from uniform distribution
         self.p_bike = self.model.random.uniform(0, 1)
+        # initialize all modes as car first
         self.mode = "car"
-        # self.mode = "bike" if self.model.random.random() < self.p_bike else "car"
 
+    # BFS search to get commute path (Manhattan distance)
     def get_commute_path(self):
         path = []
         r, c = self.home.coordinate
@@ -49,6 +55,7 @@ class BikeAgent(CellAgent):
             path.append((r, c))
         return path
 
+    ## Define movement action
     def step(self):
         cost_bike = (
             self.time_bike - self.model.safety_bonus * self.lane_coverage_on_path
@@ -75,16 +82,5 @@ class BikeAgent(CellAgent):
                 )
             )
         )
-        ## deterministic choie
+        ## deterministic choice to bike
         self.mode = "bike" if self.p_bike > self.model.bike_threshold else "car"
-
-        ## probabilistic choice
-        # if self.model.random.random() < 0.05:  # 5% chance of random choice
-        #     self.mode = "bike" if self.model.random.random() < 0.3 else "car"
-        # else:
-        #     self.mode = "bike" if self.p_bike > self.model.bike_threshold else "car"
-
-        # if self.model.steps == 1 and self.unique_id < 5:
-        #     print(
-        #         f"agent {self.unique_id}: cost_diff={cost_difference:.3f}, p_bike={self.p_bike:.3f}, social={social_fraction:.3f}, mode={self.mode}"
-        #     )
